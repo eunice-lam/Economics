@@ -1,0 +1,1101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Efficiency</title>
+    <style>
+        :root {
+            --bg-color: #f1f5f9;
+            --card-bg: #ffffff;
+            --text-main: #0f172a;
+            --primary: #2563eb;
+            --cs-color: rgba(59, 130, 246, 0.55);
+            --ps-color: rgba(249, 115, 22, 0.55);
+            --tax-color: rgba(234, 179, 8, 0.5);
+            --dwl-color: rgba(239, 68, 68, 0.65);
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .dashboard-container {
+            max-width: 1250px;
+            width: 100%;
+            display: grid;
+            grid-template-columns: 310px 1fr;
+            gap: 20px;
+            margin-top: 10px;
+        }
+
+        @media (max-width: 900px) {
+            .dashboard-container { grid-template-columns: 1fr; }
+        }
+
+        .sidebar {
+            background: var(--card-bg);
+            border-radius: 10px;
+            padding: 15px;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+            border: 1px solid #e2e8f0;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            max-height: 85vh;
+            overflow-y: auto;
+        }
+
+        .student-panel {
+            background: #e0f2fe;
+            border: 1px solid #bae6fd;
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 10px;
+        }
+
+        .student-input {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #7dd3fc;
+            border-radius: 4px;
+            box-sizing: border-box;
+            margin-top: 5px;
+            font-family: inherit;
+        }
+
+        .score-display {
+            font-size: 1.1rem;
+            font-weight: bold;
+            color: #0369a1;
+            margin-top: 10px;
+            text-align: center;
+        }
+
+        .btn-submit-score {
+            background: #0284c7;
+            color: white;
+            border: none;
+            width: 100%;
+            padding: 10px;
+            border-radius: 6px;
+            font-size: 0.95rem;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        .btn-submit-score:hover { background: #0369a1; }
+
+        .nav-category {
+            font-size: 0.85rem;
+            font-weight: bold;
+            color: #64748b;
+            margin-top: 12px;
+            margin-bottom: 4px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .nav-item {
+            padding: 8px 10px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.85rem;
+            border: 1px solid transparent;
+            background: #f8fafc;
+            color: #475569;
+            transition: all 0.2s ease;
+            text-align: left;
+        }
+        .nav-item:hover { background: #e2e8f0; color: #0f172a; }
+        .nav-item.active { background: var(--primary); color: white; border-color: #1d4ed8; }
+
+        .workspace {
+            display: grid;
+            grid-template-columns: 1.15fr 0.85fr;
+            gap: 20px;
+        }
+        @media (max-width: 768px) {
+            .workspace { grid-template-columns: 1fr; }
+        }
+
+        .panel {
+            background: var(--card-bg);
+            padding: 22px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+            border: 1px solid #e2e8f0;
+        }
+
+        .dse-table { width: 100%; border-collapse: collapse; margin: 15px 0; }
+        .dse-table th, .dse-table td { border: 1px solid #e2e8f0; padding: 10px; text-align: center; font-size: 0.9rem; }
+        .dse-table th { background: #f8fafc; font-weight: 600; }
+        .active-row { background: #f0fdf4; font-weight: bold; }
+
+        .quiz-instruction {
+            font-size: 0.95rem; font-weight: 600; color: #1e293b; margin-bottom: 8px;
+            padding: 10px; background: #f8fafc; border-left: 4px solid var(--primary);
+            border-radius: 4px; line-height: 1.4;
+        }
+
+        .quiz-option {
+            display: block; background: #f8fafc; border: 1px solid #e2e8f0; padding: 12px;
+            margin: 8px 0; border-radius: 6px; cursor: pointer; transition: all 0.2s; font-size: 0.9rem;
+        }
+        .quiz-option:hover { background: #f1f5f9; }
+        .quiz-option.selected { background: #e0f2fe; border-color: #bae6fd; color: #0369a1; }
+
+        .btn-action {
+            background: #0f172a; color: white; border: none; width: 100%; padding: 12px;
+            border-radius: 6px; font-size: 0.95rem; font-weight: bold; cursor: pointer;
+        }
+        .btn-action:hover { background: #334155; }
+
+        .explanation {
+            margin-top: 12px; padding: 12px; border-radius: 6px; display: none;
+            font-size: 0.9rem; line-height: 1.5;
+        }
+        .correct { background: #f0fdf4; border: 1px solid #bbf7d0; color: #166534; }
+        .incorrect { background: #fef2f2; border: 1px solid #fecaca; color: #991b1b; }
+
+        svg { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; }
+        .axis { stroke: #0f172a; stroke-width: 2.5px; }
+        .curve { stroke-width: 3.5px; fill: none; }
+        .demand { stroke: #dc2626; }
+        .supply { stroke: #16a34a; }
+        .guide { stroke: #475569; stroke-dasharray: 4,4; stroke-width: 1.5px; }
+        .guide-old { stroke: #94a3b8; stroke-dasharray: 3,3; stroke-width: 1.2px; }
+        .policy-line { stroke: #8b5cf6; stroke-width: 4px; stroke-linecap: round; }
+    </style>
+</head>
+<body>
+
+<div style="text-align: center; margin-bottom: 15px;">
+    <h1 style="margin: 0; font-size: 2.4rem; color: #0f172a; letter-spacing: -0.5px;">Efficiency</h1>
+</div>
+
+<div class="dashboard-container">
+    <div class="sidebar">
+        <div class="student-panel">
+            <label style="font-size: 0.8rem; font-weight: bold; color: #0369a1;">Student Name / Class No:</label>
+            <input type="text" id="student-name" class="student-input" placeholder="e.g. Chan Tai Man (12)">
+            <div class="score-display">Score: <span id="score-text">0</span> / 18</div>
+            <button class="btn-submit-score" id="submit-cloud-btn" onclick="submitDataToGoogle()">💾 Submit Record</button>
+            <div id="submit-status" style="font-size: 0.8rem; text-align: center; margin-top: 5px; color: #0369a1; display: none;">Saving...</div>
+        </div>
+
+        <div id="sidebar-nav" style="display: flex; flex-direction: column; gap: 4px;"></div>
+    </div>
+
+    <div class="workspace">
+        <div class="panel" style="display: flex; flex-direction: column; justify-content: space-between;">
+            <div>
+                <h3 id="lvl-title" style="margin: 0; color: #1e293b; font-size: 1.25rem;">-</h3>
+                <p id="lvl-desc" style="color: #475569; font-size: 0.95rem; margin: 10px 0 15px 0; line-height: 1.45;">-</p>
+                
+                <table class="dse-table" id="data-table">
+                    <thead>
+                        <tr>
+                            <th>Unit</th>
+                            <th>Marginal Benefit (MB)</th>
+                            <th>Marginal Cost (MC)</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="table-rows"></tbody>
+                </table>
+            </div>
+
+            <div style="margin-top: 15px;">
+                <div id="quiz-instruction-box" class="quiz-instruction"></div>
+                <div id="options-box"></div>
+                <button class="btn-action" style="margin-top: 8px;" onclick="checkAnswer()">Submit Assessment</button>
+                <div class="explanation" id="explain-box"></div>
+            </div>
+        </div>
+
+        <div class="panel" style="display: flex; flex-direction: column; align-items: center; justify-content: center;">
+            <svg viewBox="0 0 440 420" width="100%">
+                <defs>
+                    <marker id="arrow" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                        <path d="M 0 0 L 10 5 L 0 10 z" fill="#0f172a"/>
+                    </marker>
+                </defs>
+
+                <polygon id="region-cs" fill="var(--cs-color)" points="0,0 0,0 0,0 0,0"/>
+                <polygon id="region-ps" fill="var(--ps-color)" points="0,0 0,0 0,0 0,0"/>
+                <polygon id="region-tax" fill="var(--tax-color)" points="0,0 0,0 0,0 0,0" opacity="0"/>
+                <polygon id="region-dwl" fill="var(--dwl-color)" points="0,0 0,0 0,0" opacity="0"/>
+
+                <g id="lvl1-ticks" opacity="0">
+                    <line x1="115" y1="350" x2="115" y2="355" stroke="#0f172a" stroke-width="1.5"/>
+                    <text x="115" y="370" font-size="11" fill="#475569" text-anchor="middle">1</text>
+                    <line x1="170" y1="350" x2="170" y2="355" stroke="#0f172a" stroke-width="1.5"/>
+                    <text x="170" y="370" font-size="11" fill="#475569" text-anchor="middle">2</text>
+                    <line x1="225" y1="350" x2="225" y2="355" stroke="#0f172a" stroke-width="1.5"/>
+                    <text x="225" y="370" font-size="11" fill="#475569" text-anchor="middle">3</text>
+                    <line x1="280" y1="350" x2="280" y2="355" stroke="#0f172a" stroke-width="1.5"/>
+                    <text x="280" y="370" font-size="11" fill="#475569" text-anchor="middle">4</text>
+                    <line x1="335" y1="350" x2="335" y2="355" stroke="#0f172a" stroke-width="1.5"/>
+                    <text x="335" y="370" font-size="11" fill="#475569" text-anchor="middle">5</text>
+                    
+                    <line x1="55" y1="269" x2="60" y2="269" stroke="#0f172a" stroke-width="1.5"/>
+                    <text x="50" y="273" font-size="11" fill="#475569" text-anchor="end">15</text>
+                    <line x1="55" y1="242" x2="60" y2="242" stroke="#0f172a" stroke-width="1.5"/>
+                    <text x="50" y="246" font-size="11" fill="#475569" text-anchor="end">20</text>
+                    <line x1="55" y1="215" x2="60" y2="215" stroke="#0f172a" stroke-width="1.5"/>
+                    <text x="50" y="219" font-size="11" fill="#475569" text-anchor="end">25</text>
+                    <line x1="55" y1="188" x2="60" y2="188" stroke="#0f172a" stroke-width="1.5"/>
+                    <text x="50" y="192" font-size="11" fill="#475569" text-anchor="end">30</text>
+                    <line x1="55" y1="161" x2="60" y2="161" stroke="#0f172a" stroke-width="1.5"/>
+                    <text x="50" y="165" font-size="11" fill="#475569" text-anchor="end">35</text>
+                    <line x1="55" y1="134" x2="60" y2="134" stroke="#0f172a" stroke-width="1.5"/>
+                    <text x="50" y="138" font-size="11" fill="#475569" text-anchor="end">40</text>
+                    <line x1="55" y1="107" x2="60" y2="107" stroke="#0f172a" stroke-width="1.5"/>
+                    <text x="50" y="111" font-size="11" fill="#475569" text-anchor="end">45</text>
+                    <line x1="55" y1="53" x2="60" y2="53" stroke="#0f172a" stroke-width="1.5"/>
+                    <text x="50" y="57" font-size="11" fill="#475569" text-anchor="end">55</text>
+                </g>
+
+                <line x1="60" y1="350" x2="410" y2="350" class="axis" marker-end="url(#arrow)"/> 
+                <line x1="60" y1="350" x2="60" y2="30" class="axis" marker-end="url(#arrow)"/>   
+                <text x="395" y="370" font-weight="bold" font-size="13">Q</text>
+                <text x="25" y="35" font-weight="bold" font-size="13">P</text>
+                <text x="48" y="365" font-size="12" fill="#64748b">0</text>
+
+                <line id="guide-p-old" class="guide-old" x1="60" y1="200" x2="260" y2="200" opacity="0"/>
+                <line id="guide-q-old" class="guide-old" x1="260" y1="350" x2="260" y2="200" opacity="0"/>
+                <text id="lbl-p-old" x="22" y="204" font-size="13" font-weight="bold" fill="#94a3b8" opacity="0"></text>
+                <text id="lbl-q-old" x="260" y="370" font-size="13" font-weight="bold" fill="#94a3b8" text-anchor="middle" opacity="0"></text>
+
+                <line id="line-d1" class="curve demand" x1="0" y1="0" x2="0" y2="0"/>
+                <line id="line-d2" class="curve demand" x1="0" y1="0" x2="0" y2="0" opacity="0"/>
+                <line id="line-s1" class="curve supply" x1="0" y1="0" x2="0" y2="0"/>
+                <line id="line-s2" class="curve supply" x1="0" y1="0" x2="0" y2="0" opacity="0"/>
+
+                <line id="policy-line-horiz" class="policy-line" x1="60" y1="0" x2="380" y2="0" opacity="0"/>
+                <text id="lbl-policy-horiz" x="385" y="0" font-size="13" font-weight="bold" fill="#8b5cf6" opacity="0"></text>
+
+                <line id="policy-line-vert" class="policy-line" x1="0" y1="350" x2="0" y2="30" opacity="0"/>
+                <text id="lbl-policy-vert" x="0" y="25" font-size="13" font-weight="bold" fill="#8b5cf6" text-anchor="middle" opacity="0"></text>
+
+                <line id="guide-p1" class="guide" x1="60" y1="0" x2="0" y2="0"/>
+                <line id="guide-p2" class="guide" x1="60" y1="0" x2="0" y2="0"/>
+                <line id="guide-q" class="guide" x1="0" y1="350" x2="0" y2="0"/>
+
+                <text id="lbl-p1" x="22" y="0" font-size="13" font-weight="bold" fill="#1e293b"></text>
+                <text id="lbl-p2" x="22" y="0" font-size="13" font-weight="bold" fill="#1e293b"></text>
+                <text id="lbl-q" x="0" y="380" font-size="13" font-weight="bold" fill="#1e293b" text-anchor="middle"></text>
+                
+                <text id="lbl-d1-curve" x="0" y="0" font-size="14" font-weight="bold" fill="#dc2626">D₁</text>
+                <text id="lbl-d2-curve" x="0" y="0" font-size="14" font-weight="bold" fill="#991b1b" opacity="0">D₂</text>
+                <text id="lbl-s1-curve" x="0" y="0" font-size="14" font-weight="bold" fill="#16a34a">S₁</text>
+                <text id="lbl-s2-curve" x="0" y="0" font-size="14" font-weight="bold" fill="#14532d" opacity="0">S₂</text>
+
+                <g id="mb-mc-markers" opacity="0">
+                    <line id="mb-mc-gap" x1="0" y1="0" x2="0" y2="0" stroke="#0f172a" stroke-width="2.5" stroke-dasharray="5,5" />
+                    
+                    <circle id="dot-mb" cx="0" cy="0" r="5" fill="#dc2626" stroke="#ffffff" stroke-width="1.5"/>
+                    <text id="lbl-mb-dot" x="0" y="0" font-size="14" font-weight="bold" fill="#dc2626">MB</text>
+                    
+                    <circle id="dot-mc" cx="0" cy="0" r="5" fill="#16a34a" stroke="#ffffff" stroke-width="1.5"/>
+                    <text id="lbl-mc-dot" x="0" y="0" font-size="14" font-weight="bold" fill="#16a34a">MC</text>
+                </g>
+            </svg>
+
+            <div style="margin-top: 15px; width: 100%; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 0.85rem;">
+                <div style="display:flex; align-items:center; gap:6px;"><div style="width:14px; height:14px; background:var(--cs-color); border:1px solid #2563eb;"></div>Consumer Surplus (CS)</div>
+                <div style="display:flex; align-items:center; gap:6px;"><div style="width:14px; height:14px; background:var(--ps-color); border:1px solid #ea580c;"></div>Producer Surplus (PS)</div>
+                <div style="display:flex; align-items:center; gap:6px;"><div style="width:14px; height:14px; background:var(--tax-color); border:1px solid #ca8a04;"></div>Gov. Revenue / Expense</div>
+                <div style="display:flex; align-items:center; gap:6px;"><div style="width:14px; height:14px; background:var(--dwl-color); border:1px solid #dc2626;"></div>Deadweight Loss (DWL)</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div style="text-align: center; margin-top: 30px; padding-bottom: 20px; font-size: 0.85rem; color: #64748b; font-weight: 500;">
+    &copy; 2026 eunice_lam. All rights reserved.
+</div>
+
+<script>
+    let currentScore = 0;
+    const TOTAL_LEVELS = 18;
+    const completedLevels = new Set(); 
+
+    const baseline_mb = [45, 40, 35, 30, 25];
+    const baseline_mc = [15, 20, 25, 30, 35];
+
+    // Nav Structure
+    const levelCategories = [
+        { name: "Level 1: Fundamentals", start: 0, end: 2 },
+        { name: "Level 2: Market Shifts", start: 3, end: 4 },
+        { name: "Level 3: Interventions", start: 5, end: 9 },
+        { name: "Level 4: Elasticity Effects", start: 10, end: 17 }
+    ];
+
+    const levelsData = [
+        // LEVEL 1: Q1-3
+        {
+            title: "1. Free Market Equilibrium",
+            desc: "Market is perfectly competitive with no intervention. Equilibrium settles where Demand (MB) intersects Supply (MC). At the equilibrium price ($30), MB = MC = $30.",
+            instruction: "Calculate the value of Consumer Surplus, Producer Surplus, and Deadweight Loss:",
+            qualitative: false,
+            state: { d_slope: 5, s_slope: 5, d1_int: 50, d2_int: 50, show_d2: 0, s1_int: 10, s2_int: 10, show_s2: 0, q_tx: 4, p_buy: 30, p_sel: 30, dwl_op: 0, gov_mode: 0, s_cost_int: 10, show_old_ref: 0, policy_horiz: 0, policy_vert: 0, show_policy_horiz: 0, show_policy_vert: 0 },
+            getInterventions: () => {
+                return {
+                    p_buy: 30, p_sel: 30, q_tx: 4,
+                    options: [
+                        { text: `CS = $30, PS = $30, DWL = $0`, correct: true },
+                        { text: `CS = $20, PS = $25, DWL = $15`, correct: false },
+                        { text: `CS = $15, PS = $15, DWL = $0`, correct: false }
+                    ],
+                    explain: `• <b>CS</b>: Sum of (MB - Price) = (45-30) + (40-30) + (35-30) + (30-30) = 15 + 10 + 5 + 0 = <b>$30</b>.<br>` +
+                             `• <b>PS</b>: Sum of (Price - MC) = (30-15) + (30-20) + (30-25) + (30-30) = 15 + 10 + 5 + 0 = <b>$30</b>.<br>` +
+                             `• <b>DWL</b> = <b>$0</b>.`
+                };
+            }
+        },
+        {
+            title: "2. Underproduction (Q < Qe)",
+            desc: "Quantity transacted is restricted below the equilibrium level.",
+            instruction: "When the market produces less than the equilibrium quantity:",
+            qualitative: false,
+            state: { d_slope: 5, s_slope: 5, d1_int: 50, d2_int: 50, show_d2: 0, s1_int: 10, s2_int: 10, show_s2: 0, q_tx: 2, p_buy: 30, p_sel: 30, dwl_op: 1, gov_mode: 0, s_cost_int: 10, show_old_ref: 1, policy_horiz: 0, policy_vert: 0, show_policy_horiz: 0, show_policy_vert: 0 },
+            getInterventions: () => {
+                return {
+                    p_buy: 30, p_sel: 30, q_tx: 2,
+                    options: [
+                        { text: "Deadweight loss exists because MB > MC for the unproduced units.", correct: true },
+                        { text: "Deadweight loss does not exist because there is no overproduction.", correct: false },
+                        { text: "Total social surplus is maximized since costs are lower.", correct: false }
+                    ],
+                    explain: `• For the unproduced units, <b>Marginal Benefit exceeds Marginal Cost</b>.<br>` +
+                             `• Mutually beneficial trades are not fully captured, resulting in a Deadweight Loss.`
+                };
+            }
+        },
+        {
+            title: "3. Overproduction (Q > Qe)",
+            desc: "Quantity transacted is expanded beyond the equilibrium level.",
+            instruction: "When the market produces more than the equilibrium quantity:",
+            qualitative: false,
+            state: { d_slope: 5, s_slope: 5, d1_int: 50, d2_int: 50, show_d2: 0, s1_int: 10, s2_int: 10, show_s2: 0, q_tx: 5, p_buy: 30, p_sel: 30, dwl_op: 1, gov_mode: 0, s_cost_int: 10, show_old_ref: 1, policy_horiz: 0, policy_vert: 0, show_policy_horiz: 0, show_policy_vert: 0 },
+            getInterventions: () => {
+                return {
+                    p_buy: 30, p_sel: 30, q_tx: 5,
+                    options: [
+                        { text: "Deadweight loss exists because MC > MB for the overproduced units.", correct: true },
+                        { text: "Consumer surplus decreases and producer surplus decreases.", correct: false },
+                        { text: "Total social surplus must increase since quantity traded increases.", correct: false }
+                    ],
+                    explain: `• For the overproduced units, the cost of production exceeds the benefit to consumers (<b>Marginal Cost > Marginal Benefit</b>).<br>` +
+                             `• This results in a net social loss on overproduction, creating a Deadweight Loss.`
+                };
+            }
+        },
+
+        // LEVEL 2: Q4-5
+        {
+            title: "4. Shift: Demand Increases",
+            desc: "An increase in demand shifts the demand curve rightward.",
+            instruction: "How will the surpluses change after the demand increase?",
+            qualitative: true,
+            state: { d_slope: 5, s_slope: 5, d1_int: 50, d2_int: 60, show_d2: 1, s1_int: 10, s2_int: 10, show_s2: 0, q_tx: 5, p_buy: 35, p_sel: 35, dwl_op: 0, gov_mode: 0, s_cost_int: 10, show_old_ref: 1, policy_horiz: 0, policy_vert: 0, show_policy_horiz: 0, show_policy_vert: 0 },
+            getInterventions: () => {
+                return {
+                    p_buy: 35, p_sel: 35, q_tx: 5,
+                    options: [
+                        { text: "Consumer surplus increases, producer surplus increases, efficiency is maintained.", correct: true },
+                        { text: "Consumer surplus decreases, producer surplus increases, deadweight loss exists.", correct: false },
+                        { text: "Consumer surplus decreases, producer surplus decreases, efficiency worsens.", correct: false }
+                    ],
+                    explain: `• <b>Consumer Surplus</b> increases because both output and demand valuation have risen.<br>` +
+                             `• <b>Producer Surplus</b> increases due to a higher market price and larger transaction volume.<br>` +
+                             `• The market self-adjusts: <b>Deadweight Loss remains zero</b>.`
+                };
+            }
+        },
+        {
+            title: "5. Shift: Supply Decreases",
+            desc: "A decrease in supply shifts the supply curve leftward.",
+            instruction: "How will the surpluses change after the supply decrease?",
+            qualitative: true,
+            state: { d_slope: 5, s_slope: 5, d1_int: 50, d2_int: 50, show_d2: 0, s1_int: 10, s2_int: 20, show_s2: 1, q_tx: 3, p_buy: 35, p_sel: 35, dwl_op: 0, gov_mode: 0, s_cost_int: 20, show_old_ref: 1, policy_horiz: 0, policy_vert: 0, show_policy_horiz: 0, show_policy_vert: 0 },
+            getInterventions: () => {
+                return {
+                    p_buy: 35, p_sel: 35, q_tx: 3,
+                    options: [
+                        { text: "Consumer surplus decreases, producer surplus decreases, efficiency is maintained.", correct: true },
+                        { text: "Consumer surplus decreases, producer surplus increases, deadweight loss exists.", correct: false },
+                        { text: "Consumer surplus increases, producer surplus decreases, efficiency is maintained.", correct: false }
+                    ],
+                    explain: `• <b>Consumer Surplus</b> decreases as consumers buy fewer units at a higher price.<br>` +
+                             `• <b>Producer Surplus</b> decreases due to higher production costs and lower transaction volume.<br>` +
+                             `• The market self-adjusts efficiently to the new cost constraints: <b>Deadweight Loss remains zero</b>.`
+                };
+            }
+        },
+
+        // LEVEL 3: Q6-10
+        {
+            title: "6. Effective Price Floor",
+            desc: "The government sets an effective price floor above the equilibrium price.",
+            instruction: "How will the surpluses change due to the price floor?",
+            qualitative: true,
+            state: { d_slope: 5, s_slope: 5, d1_int: 50, d2_int: 50, show_d2: 0, s1_int: 10, s2_int: 10, show_s2: 0, q_tx: 2, p_buy: 40, p_sel: 40, dwl_op: 1, gov_mode: 0, s_cost_int: 10, show_old_ref: 1, policy_horiz: 40, policy_vert: 0, show_policy_horiz: 1, show_policy_vert: 0 },
+            getInterventions: () => {
+                return {
+                    p_buy: 40, p_sel: 40, q_tx: 2,
+                    options: [
+                        { text: "Consumer surplus decreases, producer surplus is uncertain, deadweight loss exists (MB > MC).", correct: true },
+                        { text: "Consumer surplus decreases, producer surplus decreases, deadweight loss is zero.", correct: false },
+                        { text: "Consumer surplus increases, producer surplus decreases, deadweight loss exists (MB > MC).", correct: false }
+                    ],
+                    explain: `• <b>Consumer Surplus</b> must decrease because buyers face a higher price and buy fewer units.<br>` +
+                             `• <b>Producer Surplus</b> is uncertain: producers gain from the higher price but lose due to the lower transaction volume.<br>` +
+                             `• <b>Deadweight Loss</b> exists because output is restricted below the efficient level, meaning for the unproduced units <b>MB > MC</b>.`
+                };
+            }
+        },
+        {
+            title: "7. Effective Price Ceiling",
+            desc: "The government sets an effective price ceiling below the equilibrium price.",
+            instruction: "How will the surpluses change due to the price ceiling?",
+            qualitative: true,
+            state: { d_slope: 5, s_slope: 5, d1_int: 50, d2_int: 50, show_d2: 0, s1_int: 10, s2_int: 10, show_s2: 0, q_tx: 2, p_buy: 20, p_sel: 20, dwl_op: 1, gov_mode: 0, s_cost_int: 10, show_old_ref: 1, policy_horiz: 20, policy_vert: 0, show_policy_horiz: 1, show_policy_vert: 0 },
+            getInterventions: () => {
+                return {
+                    p_buy: 20, p_sel: 20, q_tx: 2,
+                    options: [
+                        { text: "Consumer surplus is uncertain, producer surplus decreases, deadweight loss exists (MB > MC).", correct: true },
+                        { text: "Consumer surplus increases, producer surplus decreases, deadweight loss is zero.", correct: false },
+                        { text: "Consumer surplus decreases, producer surplus decreases, deadweight loss exists (MB > MC).", correct: false }
+                    ],
+                    explain: `• <b>Producer Surplus</b> must decrease because sellers receive a lower price and sell fewer units.<br>` +
+                             `• <b>Consumer Surplus</b> is uncertain: consumers gain from a lower price but lose due to the lower transaction volume.<br>` +
+                             `• <b>Deadweight Loss</b> exists because transaction volume is restricted below the efficient quantity (<b>MB > MC</b>).`
+                };
+            }
+        },
+        {
+            title: "8. Effective Quota",
+            desc: "The government sets an effective quota restricting the quantity transacted.",
+            instruction: "How will the surpluses change due to the quota?",
+            qualitative: true,
+            state: { d_slope: 5, s_slope: 5, d1_int: 50, d2_int: 50, show_d2: 0, s1_int: 10, s2_int: 10, show_s2: 0, q_tx: 2, p_buy: 40, p_sel: 40, dwl_op: 1, gov_mode: 0, s_cost_int: 10, show_old_ref: 1, policy_horiz: 0, policy_vert: 2, show_policy_horiz: 0, show_policy_vert: 1 },
+            getInterventions: () => {
+                return {
+                    p_buy: 40, p_sel: 40, q_tx: 2,
+                    options: [
+                        { text: "Consumer surplus decreases, producer surplus is uncertain, deadweight loss exists (MB > MC).", correct: true },
+                        { text: "Consumer surplus decreases, producer surplus increases, deadweight loss is zero.", correct: false },
+                        { text: "Consumer surplus increases, producer surplus decreases, deadweight loss exists (MB > MC).", correct: false }
+                    ],
+                    explain: `• <b>Consumer Surplus</b> must decrease as price rises and quantity falls.<br>` +
+                             `• <b>Producer Surplus</b> is uncertain: producers gain from quota rent but lose from lower quantity transacted.<br>` +
+                             `• <b>Deadweight Loss</b> exists because output is restricted below the efficient level (<b>MB > MC</b>).`
+                };
+            }
+        },
+        {
+            title: "9. Per-Unit Tax",
+            desc: "The government imposes a per-unit sales tax, shifting the supply curve upward.",
+            instruction: "How will the surpluses change due to the tax?",
+            qualitative: true,
+            state: { d_slope: 5, s_slope: 5, d1_int: 50, d2_int: 50, show_d2: 0, s1_int: 10, s2_int: 20, show_s2: 1, q_tx: 3, p_buy: 35, p_sel: 25, dwl_op: 1, gov_mode: 1, s_cost_int: 10, show_old_ref: 1, policy_horiz: 0, policy_vert: 0, show_policy_horiz: 0, show_policy_vert: 0 },
+            getInterventions: () => {
+                return {
+                    p_buy: 35, p_sel: 25, q_tx: 3,
+                    options: [
+                        { text: "Consumer surplus decreases, producer surplus decreases, deadweight loss exists (MB > MC).", correct: true },
+                        { text: "Consumer surplus decreases, producer surplus decreases, deadweight loss is zero.", correct: false },
+                        { text: "Total social surplus increases because of government tax revenue.", correct: false }
+                    ],
+                    explain: `• <b>Consumer Surplus</b> decreases as buyers pay a higher price.<br>` +
+                             `• <b>Producer Surplus</b> decreases as sellers receive a lower net price.<br>` +
+                             `• <b>Deadweight Loss</b> exists because quantity is restricted below equilibrium (where <b>MB > MC</b>), meaning the combined surplus loss is greater than the tax revenue.`
+                };
+            }
+        },
+        {
+            title: "10. Per-Unit Subsidy",
+            desc: "The government grants a per-unit subsidy, shifting the supply curve downward.",
+            instruction: "How will the surpluses change due to the subsidy?",
+            qualitative: true,
+            state: { d_slope: 5, s_slope: 5, d1_int: 50, d2_int: 50, show_d2: 0, s1_int: 10, s2_int: 0, show_s2: 1, q_tx: 5, p_buy: 25, p_sel: 35, dwl_op: 1, gov_mode: 2, s_cost_int: 10, show_old_ref: 1, policy_horiz: 0, policy_vert: 0, show_policy_horiz: 0, show_policy_vert: 0 },
+            getInterventions: () => {
+                return {
+                    p_buy: 25, p_sel: 35, q_tx: 5,
+                    options: [
+                        { text: "Consumer surplus increases, producer surplus increases, deadweight loss exists (MC > MB).", correct: true },
+                        { text: "Consumer surplus increases, producer surplus increases, deadweight loss is zero.", correct: false },
+                        { text: "Total social surplus is maximized since output is higher.", correct: false }
+                    ],
+                    explain: `• <b>Consumer Surplus</b> increases as buyers pay a lower price.<br>` +
+                             `• <b>Producer Surplus</b> increases as sellers receive a higher price including subsidy.<br>` +
+                             `• <b>Deadweight Loss</b> exists because quantity expands beyond equilibrium. For these overproduced units, <b>MC > MB</b>.`
+                };
+            }
+        },
+
+        // LEVEL 4: Q11-18
+        {
+            title: "11. Tax + Perfectly Elastic Demand",
+            desc: "A unit tax is imposed when demand is perfectly elastic (horizontal).",
+            instruction: "How will the surpluses change due to the tax?",
+            qualitative: true,
+            state: { d_slope: 0, s_slope: 5, d1_int: 30, d2_int: 30, show_d2: 0, s1_int: 10, s2_int: 20, show_s2: 1, q_tx: 2, p_buy: 30, p_sel: 20, dwl_op: 1, gov_mode: 1, s_cost_int: 10, show_old_ref: 1, policy_horiz: 0, policy_vert: 0, show_policy_horiz: 0, show_policy_vert: 0 },
+            getInterventions: () => {
+                return {
+                    p_buy: 30, p_sel: 20, q_tx: 2,
+                    options: [
+                        { text: "Consumer surplus is unchanged, producer surplus decreases, deadweight loss exists (MB > MC).", correct: true },
+                        { text: "Consumer surplus decreases, producer surplus decreases, deadweight loss is zero.", correct: false },
+                        { text: "Consumer surplus increases, producer surplus decreases, deadweight loss exists (MB > MC).", correct: false }
+                    ],
+                    explain: `• <b>Consumer Surplus</b> is unchanged (zero) because buyers face a perfectly horizontal demand and the price paid remains exactly the same.<br>` +
+                             `• <b>Producer Surplus</b> decreases as sellers receive a lower net price.<br>` +
+                             `• <b>Deadweight Loss</b> exists due to a reduction in transaction quantity where <b>MB > MC</b>.`
+                };
+            }
+        },
+        {
+            title: "12. Tax + Perfectly Inelastic Demand",
+            desc: "A unit tax is imposed when demand is perfectly inelastic (vertical).",
+            instruction: "How will the surpluses change due to the tax?",
+            qualitative: true,
+            state: { d_slope: 500, s_slope: 5, d1_int: 2030, d2_int: 2030, show_d2: 0, s1_int: 10, s2_int: 20, show_s2: 1, q_tx: 4, p_buy: 40, p_sel: 30, dwl_op: 0, gov_mode: 1, s_cost_int: 10, show_old_ref: 1, policy_horiz: 0, policy_vert: 0, show_policy_horiz: 0, show_policy_vert: 0 },
+            getInterventions: () => {
+                return {
+                    p_buy: 40, p_sel: 30, q_tx: 4,
+                    options: [
+                        { text: "Consumer surplus decreases, producer surplus is unchanged, deadweight loss is zero.", correct: true },
+                        { text: "Consumer surplus decreases, producer surplus decreases, deadweight loss exists (MB > MC).", correct: false },
+                        { text: "Consumer surplus is unchanged, producer surplus decreases, deadweight loss is zero.", correct: false }
+                    ],
+                    explain: `• <b>Consumer Surplus</b> decreases as the burden of the tax is fully shifted to buyers (higher price).<br>` +
+                             `• <b>Producer Surplus</b> is unchanged because the net price received by sellers and quantity transacted remain exactly the same.<br>` +
+                             `• <b>Deadweight Loss</b> is zero since there is no reduction in the quantity transacted.`
+                };
+            }
+        },
+        {
+            title: "13. Tax + Perfectly Elastic Supply",
+            desc: "A unit tax is imposed when supply is perfectly elastic (horizontal).",
+            instruction: "How will the surpluses change due to the tax?",
+            qualitative: true,
+            state: { d_slope: 5, s_slope: 0, d1_int: 50, d2_int: 50, show_d2: 0, s1_int: 30, s2_int: 40, show_s2: 1, q_tx: 2, p_buy: 40, p_sel: 30, dwl_op: 1, gov_mode: 1, s_cost_int: 30, show_old_ref: 1, policy_horiz: 0, policy_vert: 0, show_policy_horiz: 0, show_policy_vert: 0 },
+            getInterventions: () => {
+                return {
+                    p_buy: 40, p_sel: 30, q_tx: 2,
+                    options: [
+                        { text: "Consumer surplus decreases, producer surplus is unchanged, deadweight loss exists (MB > MC).", correct: true },
+                        { text: "Consumer surplus decreases, producer surplus decreases, deadweight loss is zero.", correct: false },
+                        { text: "Consumer surplus decreases, producer surplus decreases, deadweight loss exists (MB > MC).", correct: false }
+                    ],
+                    explain: `• <b>Consumer Surplus</b> decreases because buyers pay a higher price and buy fewer units.<br>` +
+                             `• <b>Producer Surplus</b> is unchanged (zero) because the supply curve is perfectly horizontal and sellers keep their baseline net price.<br>` +
+                             `• <b>Deadweight Loss</b> exists due to a reduction in transaction quantity where <b>MB > MC</b>.`
+                };
+            }
+        },
+        {
+            title: "14. Tax + Perfectly Inelastic Supply",
+            desc: "A unit tax is imposed when supply is perfectly inelastic (vertical).",
+            instruction: "How will the surpluses change due to the tax?",
+            qualitative: true,
+            state: { d_slope: 5, s_slope: 500, d1_int: 50, d2_int: 50, show_d2: 0, s1_int: -1970, s2_int: -1960, show_s2: 1, q_tx: 4, p_buy: 30, p_sel: 20, dwl_op: 0, gov_mode: 1, s_cost_int: -1970, show_old_ref: 1, policy_horiz: 0, policy_vert: 0, show_policy_horiz: 0, show_policy_vert: 0 },
+            getInterventions: () => {
+                return {
+                    p_buy: 30, p_sel: 20, q_tx: 4,
+                    options: [
+                        { text: "Consumer surplus is unchanged, producer surplus decreases, deadweight loss is zero.", correct: true },
+                        { text: "Consumer surplus decreases, producer surplus decreases, deadweight loss exists (MB > MC).", correct: false },
+                        { text: "Consumer surplus increases, producer surplus decreases, deadweight loss is zero.", correct: false }
+                    ],
+                    explain: `• <b>Consumer Surplus</b> is unchanged because the price paid by buyers and quantity transacted stay the same.<br>` +
+                             `• <b>Producer Surplus</b> decreases as sellers absorb the entire burden of the tax, reducing their net price.<br>` +
+                             `• <b>Deadweight Loss</b> is zero since there is no reduction in the quantity transacted.`
+                };
+            }
+        },
+        {
+            title: "15. Subsidy + Perfectly Elastic Demand",
+            desc: "A unit subsidy is granted when demand is perfectly elastic (horizontal).",
+            instruction: "How will the surpluses change due to the subsidy?",
+            qualitative: true,
+            state: { d_slope: 0, s_slope: 5, d1_int: 30, d2_int: 30, show_d2: 0, s1_int: 10, s2_int: 0, show_s2: 1, q_tx: 6, p_buy: 30, p_sel: 40, dwl_op: 1, gov_mode: 2, s_cost_int: 10, show_old_ref: 1, policy_horiz: 0, policy_vert: 0, show_policy_horiz: 0, show_policy_vert: 0 },
+            getInterventions: () => {
+                return {
+                    p_buy: 30, p_sel: 40, q_tx: 6,
+                    options: [
+                        { text: "Consumer surplus is unchanged, producer surplus increases, deadweight loss exists (MC > MB).", correct: true },
+                        { text: "Consumer surplus increases, producer surplus increases, deadweight loss is zero.", correct: false },
+                        { text: "Consumer surplus increases, producer surplus decreases, deadweight loss exists (MC > MB).", correct: false }
+                    ],
+                    explain: `• <b>Consumer Surplus</b> is unchanged (zero) as buyers face the same constant market price.<br>` +
+                             `• <b>Producer Surplus</b> increases due to a higher net price received by sellers and increased volume.<br>` +
+                             `• <b>Deadweight Loss</b> exists due to overproduction (producing extra units where <b>MC > MB</b>).`
+                };
+            }
+        },
+        {
+            title: "16. Subsidy + Perfectly Inelastic Demand",
+            desc: "A unit subsidy is granted when demand is perfectly inelastic (vertical).",
+            instruction: "How will the surpluses change due to the subsidy?",
+            qualitative: true,
+            state: { d_slope: 500, s_slope: 5, d1_int: 2030, d2_int: 2030, show_d2: 0, s1_int: 10, s2_int: 0, show_s2: 1, q_tx: 4, p_buy: 20, p_sel: 30, dwl_op: 0, gov_mode: 2, s_cost_int: 10, show_old_ref: 1, policy_horiz: 0, policy_vert: 0, show_policy_horiz: 0, show_policy_vert: 0 },
+            getInterventions: () => {
+                return {
+                    p_buy: 20, p_sel: 30, q_tx: 4,
+                    options: [
+                        { text: "Consumer surplus increases, producer surplus is unchanged, deadweight loss is zero.", correct: true },
+                        { text: "Consumer surplus increases, producer surplus increases, deadweight loss exists (MC > MB).", correct: false },
+                        { text: "Consumer surplus is unchanged, producer surplus increases, deadweight loss is zero.", correct: false }
+                    ],
+                    explain: `• <b>Consumer Surplus</b> increases because the entire subsidy shifts directly to lowering the price paid by buyers.<br>` +
+                             `• <b>Producer Surplus</b> is unchanged because the net price received by sellers and quantity remain exactly the same.<br>` +
+                             `• <b>Deadweight Loss</b> is zero since the quantity transacted does not artificially expand past the efficient baseline.`
+                };
+            }
+        },
+        {
+            title: "17. Subsidy + Perfectly Elastic Supply",
+            desc: "A unit subsidy is granted when supply is perfectly elastic (horizontal).",
+            instruction: "How will the surpluses change due to the subsidy?",
+            qualitative: true,
+            state: { d_slope: 5, s_slope: 0, d1_int: 50, d2_int: 50, show_d2: 0, s1_int: 30, s2_int: 20, show_s2: 1, q_tx: 6, p_buy: 20, p_sel: 30, dwl_op: 1, gov_mode: 2, s_cost_int: 30, show_old_ref: 1, policy_horiz: 0, policy_vert: 0, show_policy_horiz: 0, show_policy_vert: 0 },
+            getInterventions: () => {
+                return {
+                    p_buy: 20, p_sel: 30, q_tx: 6,
+                    options: [
+                        { text: "Consumer surplus increases, producer surplus is unchanged, deadweight loss exists (MC > MB).", correct: true },
+                        { text: "Consumer surplus increases, producer surplus increases, deadweight loss is zero.", correct: false },
+                        { text: "Consumer surplus decreases, producer surplus is unchanged, deadweight loss is zero.", correct: false }
+                    ],
+                    explain: `• <b>Consumer Surplus</b> increases as buyers pay a lower price and purchase more units.<br>` +
+                             `• <b>Producer Surplus</b> is unchanged (zero) because the supply line remains flat and the net receipt per unit stays the same.<br>` +
+                             `• <b>Deadweight Loss</b> exists due to overproduction (where <b>MC > MB</b> for the newly expanded units).`
+                };
+            }
+        },
+        {
+            title: "18. Subsidy + Perfectly Inelastic Supply",
+            desc: "A unit subsidy is granted when supply is perfectly inelastic (vertical).",
+            instruction: "How will the surpluses change due to the subsidy?",
+            qualitative: true,
+            state: { d_slope: 5, s_slope: 500, d1_int: 50, d2_int: 50, show_d2: 0, s1_int: -1970, s2_int: -1980, show_s2: 1, q_tx: 4, p_buy: 30, p_sel: 40, dwl_op: 0, gov_mode: 2, s_cost_int: -1970, show_old_ref: 1, policy_horiz: 0, policy_vert: 0, show_policy_horiz: 0, show_policy_vert: 0 },
+            getInterventions: () => {
+                return {
+                    p_buy: 30, p_sel: 40, q_tx: 4,
+                    options: [
+                        { text: "Consumer surplus is unchanged, producer surplus increases, deadweight loss is zero.", correct: true },
+                        { text: "Consumer surplus increases, producer surplus increases, deadweight loss exists (MC > MB).", correct: false },
+                        { text: "Consumer surplus decreases, producer surplus increases, deadweight loss is zero.", correct: false }
+                    ],
+                    explain: `• <b>Consumer Surplus</b> is unchanged because the price paid by buyers and quantity traded remain the same.<br>` +
+                             `• <b>Producer Surplus</b> increases because sellers capture the entire benefit of the subsidy via a higher net receipt.<br>` +
+                             `• <b>Deadweight Loss</b> is zero since there is no overproduction.`
+                };
+            }
+        }
+    ];
+
+    let currentGState = { d_slope: 5, s_slope: 5, d1_int: 50, d2_int: 50, show_d2: 0, s1_int: 10, s2_int: 10, show_s2: 0, q_tx: 4, p_buy: 30, p_sel: 30, dwl_op: 0, gov_mode: 0, s_cost_int: 10, show_old_ref: 0, policy_horiz: 0, policy_vert: 0, show_policy_horiz: 0, show_policy_vert: 0 };
+    let targetGState = JSON.parse(JSON.stringify(currentGState));
+    let activeLvlIdx = 0;
+    let selectedOptIdx = null;
+
+    function getX(q) { return 60 + q * 55; }
+    function getY(p) { return 350 - p * 5.4; } 
+
+    // SUBMIT DATA TO GOOGLE SHEETS
+    const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyYG0OmdaaFsqRTWdGu1JJWBdaPSvgkGhf-uq24KTCKr9GRKcl7wddSiLVEi0VSOarNPA/exec"; 
+
+    function submitDataToGoogle() {
+        const studentName = document.getElementById("student-name").value.trim();
+        if (!studentName) {
+            alert("⚠️ Please enter your Name / Class No before submitting.");
+            return;
+        }
+        
+        const statusDiv = document.getElementById("submit-status");
+        statusDiv.style.display = "block";
+        statusDiv.innerText = "⏳ Saving to Teacher's Database...";
+
+        const formData = new URLSearchParams();
+        formData.append("name", studentName);
+        formData.append("score", currentScore);
+        formData.append("total", TOTAL_LEVELS);
+
+        fetch(GOOGLE_SCRIPT_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: formData.toString(),
+            mode: 'no-cors'
+        }).then(() => {
+            statusDiv.style.color = "#16a34a";
+            statusDiv.innerText = "✅ Score successfully submitted!";
+            setTimeout(() => { statusDiv.style.display = "none"; }, 4000);
+        }).catch(err => {
+            statusDiv.style.color = "#dc2626";
+            statusDiv.innerText = "❌ Network error. Try again.";
+        });
+    }
+
+    // UTILITY SHUFFLE FUNCTION (RANDOMIZES OPTIONS)
+    function shuffleArray(array) {
+        for (let i = array.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [array[i], array[j]] = [array[j], array[i]];
+        }
+    }
+
+    function initLayout() {
+        const nav = document.getElementById("sidebar-nav");
+        
+        levelCategories.forEach(cat => {
+            const catHeader = document.createElement("div");
+            catHeader.className = "nav-category";
+            catHeader.innerText = cat.name;
+            nav.appendChild(catHeader);
+
+            for (let i = cat.start; i <= cat.end; i++) {
+                const btn = document.createElement("button");
+                btn.className = `nav-item ${i === 0 ? 'active' : ''}`;
+                btn.id = `nav-btn-${i}`;
+                btn.innerText = levelsData[i].title;
+                btn.onclick = () => selectLevel(i);
+                nav.appendChild(btn);
+            }
+        });
+        
+        selectLevel(0);
+        tickEngine();
+    }
+
+    function selectLevel(idx) {
+        activeLvlIdx = idx;
+        selectedOptIdx = null;
+        
+        document.querySelectorAll(".nav-item").forEach(b => b.classList.remove("active"));
+        document.getElementById(`nav-btn-${idx}`).classList.add("active");
+        
+        recalculateAndRender();
+    }
+
+    function recalculateAndRender() {
+        const data = levelsData[activeLvlIdx];
+        document.getElementById("lvl-title").innerText = data.title;
+        document.getElementById("lvl-desc").innerText = data.desc;
+        document.getElementById("explain-box").style.display = "none";
+
+        const dataTable = document.getElementById("data-table");
+        if (data.qualitative) {
+            dataTable.style.display = "none";
+        } else {
+            dataTable.style.display = "table";
+            const tbody = document.getElementById("table-rows");
+            tbody.innerHTML = "";
+            let current_tx_q = data.state.q_tx;
+            for(let i = 0; i < 5; i++) {
+                const tr = document.createElement("tr");
+                let isTransacted = (i < current_tx_q);
+                if (isTransacted) tr.className = "active-row";
+                tr.innerHTML = `
+                    <td><b>Unit ${i+1}</b></td>
+                    <td>$${baseline_mb[i]}</td>
+                    <td>$${baseline_mc[i]}</td>
+                    <td style="color: ${isTransacted ? '#16a34a' : '#dc2626'}"><b>${isTransacted ? 'Transacted' : 'Not Traded'}</b></td>
+                `;
+                tbody.appendChild(tr);
+            }
+        }
+
+        let results = data.getInterventions();
+        document.getElementById("quiz-instruction-box").innerText = data.instruction;
+
+        // Shuffle options and map to new UI safely
+        let ops = [...results.options];
+        shuffleArray(ops);
+        data.calculatedCorrectIndex = ops.findIndex(o => o.correct);
+
+        const optBox = document.getElementById("options-box");
+        optBox.innerHTML = "";
+        ops.forEach((opt, i) => {
+            const div = document.createElement("div");
+            div.className = "quiz-option";
+            div.innerText = opt.text;
+            div.onclick = () => {
+                selectedOptIdx = i;
+                document.querySelectorAll(".quiz-option").forEach((el, o) => el.classList.toggle("selected", o === i));
+            };
+            optBox.appendChild(div);
+        });
+
+        if (targetGState.d_slope !== data.state.d_slope || targetGState.s_slope !== data.state.s_slope) {
+            currentGState = JSON.parse(JSON.stringify(data.state));
+            currentGState.p_buy = results.p_buy;
+            currentGState.p_sel = results.p_sel;
+            currentGState.q_tx = results.q_tx;
+        }
+
+        targetGState = JSON.parse(JSON.stringify(data.state));
+        targetGState.p_buy = results.p_buy;
+        targetGState.p_sel = results.p_sel;
+        targetGState.q_tx = results.q_tx;
+
+        data.calculatedExplain = results.explain;
+    }
+
+    function checkAnswer() {
+        if (selectedOptIdx === null) return alert("Select an assessment option first!");
+        const data = levelsData[activeLvlIdx];
+        const isCorrect = (selectedOptIdx === data.calculatedCorrectIndex);
+
+        if (isCorrect && !completedLevels.has(activeLvlIdx)) {
+            currentScore++;
+            completedLevels.add(activeLvlIdx);
+            document.getElementById("score-text").innerText = currentScore;
+        }
+
+        const box = document.getElementById("explain-box");
+        box.className = `explanation ${isCorrect ? 'correct' : 'incorrect'}`;
+        box.innerHTML = `<b>${isCorrect ? '🎉 Correct!' : '❌ Incorrect Analysis'}</b><br>${data.calculatedExplain}`;
+        box.style.display = "block";
+    }
+
+    function tickEngine() {
+        const easeFactor = 0.12; 
+        for (let key in currentGState) {
+            let difference = targetGState[key] - currentGState[key];
+            if (Math.abs(difference) > 0.002) {
+                currentGState[key] += difference * easeFactor;
+            } else {
+                currentGState[key] = targetGState[key];
+            }
+        }
+        renderGraphicsFrame(currentGState);
+        requestAnimationFrame(tickEngine);
+    }
+
+    function renderGraphicsFrame(state) {
+        const data = levelsData[activeLvlIdx];
+        const isQualitative = data.qualitative;
+        
+        const d_slope = state.d_slope !== undefined ? state.d_slope : 5;
+        const s_slope = state.s_slope !== undefined ? state.s_slope : 5;
+
+        const is_d_vertical = d_slope > 100;
+        const is_s_vertical = s_slope > 100;
+
+        const maxX = 6.5;
+
+        // Toggle Level 1 Ticks (Q1-Q3)
+        if (activeLvlIdx <= 2) {
+            setAttr("lvl1-ticks", { opacity: 1 });
+        } else {
+            setAttr("lvl1-ticks", { opacity: 0 });
+        }
+
+        // Draw Curves
+        if (is_d_vertical) {
+            const fixed_x = getX(state.q_tx);
+            setAttr("line-d1", { x1: fixed_x, y1: 30, x2: fixed_x, y2: 350 });
+            setAttr("line-d2", { x1: fixed_x, y1: 30, x2: fixed_x, y2: 350, opacity: state.show_d2 });
+            setAttr("lbl-d1-curve", { x: fixed_x + 6, y: 45 });
+            setAttr("lbl-d2-curve", { x: fixed_x + 6, y: 45, opacity: state.show_d2 });
+            
+            const d1_el = document.getElementById("line-d1");
+            if (state.show_d2 > 0.5) { d1_el.setAttribute("stroke-dasharray", "4,4"); d1_el.setAttribute("opacity", "0.4"); } 
+            else { d1_el.removeAttribute("stroke-dasharray"); d1_el.setAttribute("opacity", "1"); }
+        } else {
+            const d1_y0 = getY(state.d1_int), d1_yMax = getY(state.d1_int - d_slope * maxX);
+            const d2_y0 = getY(state.d2_int), d2_yMax = getY(state.d2_int - d_slope * maxX);
+            setAttr("line-d1", { x1: getX(0), y1: d1_y0, x2: getX(maxX), y2: d1_yMax });
+            setAttr("line-d2", { x1: getX(0), y1: d2_y0, x2: getX(maxX), y2: d2_yMax, opacity: state.show_d2 });
+            setAttr("lbl-d1-curve", { x: getX(maxX - 0.2), y: getY(state.d1_int - d_slope * (maxX - 0.2)) - 10 });
+            setAttr("lbl-d2-curve", { x: getX(maxX - 0.2), y: getY(state.d2_int - d_slope * (maxX - 0.2)) - 10, opacity: state.show_d2 });
+            
+            const d1_el = document.getElementById("line-d1");
+            if (state.show_d2 > 0.5) { d1_el.setAttribute("stroke-dasharray", "4,4"); d1_el.setAttribute("opacity", "0.4"); } 
+            else { d1_el.removeAttribute("stroke-dasharray"); d1_el.setAttribute("opacity", "1"); }
+        }
+
+        if (is_s_vertical) {
+            const fixed_x = getX(state.q_tx);
+            setAttr("line-s1", { x1: fixed_x, y1: 30, x2: fixed_x, y2: 350 });
+            setAttr("line-s2", { x1: fixed_x, y1: 30, x2: fixed_x, y2: 350, opacity: state.show_s2 });
+            setAttr("lbl-s1-curve", { x: fixed_x + 6, y: 340 });
+            setAttr("lbl-s2-curve", { x: fixed_x + 6, y: 340, opacity: state.show_s2 });
+            
+            const s1_el = document.getElementById("line-s1");
+            if (state.show_s2 > 0.5) { s1_el.setAttribute("stroke-dasharray", "4,4"); s1_el.setAttribute("opacity", "0.4"); } 
+            else { s1_el.removeAttribute("stroke-dasharray"); s1_el.setAttribute("opacity", "1"); }
+        } else {
+            const s1_y0 = getY(state.s1_int), s1_yMax = getY(state.s1_int + s_slope * maxX);
+            const s2_y0 = getY(state.s2_int), s2_yMax = getY(state.s2_int + s_slope * maxX);
+            setAttr("line-s1", { x1: getX(0), y1: s1_y0, x2: getX(maxX), y2: s1_yMax });
+            setAttr("line-s2", { x1: getX(0), y1: s2_y0, x2: getX(maxX), y2: s2_yMax, opacity: state.show_s2 });
+            setAttr("lbl-s1-curve", { x: getX(maxX - 0.2), y: getY(state.s1_int + s_slope * (maxX - 0.2)) - 10 });
+            setAttr("lbl-s2-curve", { x: getX(maxX - 0.2), y: getY(state.s2_int + s_slope * (maxX - 0.2)) - 10, opacity: state.show_s2 });
+            
+            const s1_el = document.getElementById("line-s1");
+            if (state.show_s2 > 0.5) { s1_el.setAttribute("stroke-dasharray", "4,4"); s1_el.setAttribute("opacity", "0.4"); } 
+            else { s1_el.removeAttribute("stroke-dasharray"); s1_el.setAttribute("opacity", "1"); }
+        }
+
+        setAttr("guide-p-old", { opacity: state.show_old_ref });
+        setAttr("guide-q-old", { opacity: state.show_old_ref });
+        setAttr("lbl-p-old", { opacity: state.show_old_ref });
+        setAttr("lbl-q-old", { opacity: state.show_old_ref });
+
+        document.getElementById("lbl-p-old").innerText = isQualitative ? "P₁" : "$30";
+        document.getElementById("lbl-q-old").innerText = isQualitative ? "Q₁" : "4";
+
+        const xQ = getX(state.q_tx);
+        const yPb = getY(state.p_buy);
+        const yPs = getY(state.p_sel);
+
+        setAttr("guide-q", { x1: xQ, y1: 350, x2: xQ, y2: Math.min(yPb, yPs) });
+        setAttr("guide-p1", { x1: 60, y1: yPb, x2: xQ, y2: yPb });
+        setAttr("guide-p2", { x1: 60, y1: yPs, x2: xQ, y2: yPs, opacity: Math.abs(state.p_buy - state.p_sel) < 0.5 ? 0 : 1 });
+
+        if (state.show_policy_horiz > 0.5) {
+            let yHoriz = getY(state.policy_horiz);
+            setAttr("policy-line-horiz", { y1: yHoriz, y2: yHoriz, opacity: 1 });
+            setAttr("lbl-policy-horiz", { y: yHoriz - 6, opacity: 1 });
+            
+            let pName = state.policy_horiz > 30 ? "Price Floor" : "Price Ceiling";
+            document.getElementById("lbl-policy-horiz").innerText = isQualitative ? pName : `${pName} ($${state.policy_horiz})`;
+        } else {
+            setAttr("policy-line-horiz", { opacity: 0 });
+            setAttr("lbl-policy-horiz", { opacity: 0 });
+        }
+
+        if (state.show_policy_vert > 0.5) {
+            let xVert = getX(state.policy_vert);
+            setAttr("policy-line-vert", { x1: xVert, x2: xVert, opacity: 1 });
+            setAttr("lbl-policy-vert", { x: xVert, opacity: 1 });
+            document.getElementById("lbl-policy-vert").innerText = isQualitative ? "Quota" : `Quota (${state.policy_vert})`;
+        } else {
+            setAttr("policy-line-vert", { opacity: 0 });
+            setAttr("lbl-policy-vert", { opacity: 0 });
+        }
+
+        if (isQualitative) {
+            document.getElementById("lbl-q").innerText = "Q₂";
+            setAttr("lbl-q", { x: xQ, opacity: 1 });
+        } else {
+            setAttr("lbl-q", { opacity: 0 });
+        }
+
+        if (state.gov_mode > 0 && isQualitative) {
+            document.getElementById("lbl-p1").innerText = "Pb";
+            document.getElementById("lbl-p2").innerText = "Ps";
+        } else {
+            document.getElementById("lbl-p1").innerText = isQualitative ? "P₂" : `$${state.p_buy.toFixed(0)}`;
+            document.getElementById("lbl-p2").innerText = isQualitative ? "P₂" : `$${state.p_sel.toFixed(0)}`;
+        }
+        
+        let pLabelX = activeLvlIdx <= 2 ? 22 : 22; 
+        setAttr("lbl-p1", { y: yPb + 4, x: pLabelX, opacity: isQualitative ? 1 : 0 });
+
+        if (Math.abs(state.p_buy - state.p_sel) > 1.5) {
+            setAttr("lbl-p2", { y: yPs + 4, opacity: isQualitative ? 1 : 0 });
+        } else {
+            setAttr("lbl-p2", { opacity: 0 });
+        }
+
+        if (is_d_vertical) {
+            const csPoints = `${getX(0)},${yPb} ${getX(0)},30 ${xQ},30 ${xQ},${yPb}`;
+            setAttr("region-cs", { points: csPoints });
+        } else {
+            const d2_y0_clamped = Math.max(30, getY(state.d2_int));
+            const active_d_at_q = Math.max(30, getY(state.d2_int - d_slope * state.q_tx));
+            const csPoints = `${getX(0)},${yPb} ${getX(0)},${d2_y0_clamped} ${xQ},${active_d_at_q} ${xQ},${yPb}`;
+            setAttr("region-cs", { points: csPoints });
+        }
+
+        if (is_s_vertical) {
+            const psPoints = `${getX(0)},350 ${getX(0)},${yPs} ${xQ},${yPs} ${xQ},350`;
+            setAttr("region-ps", { points: psPoints });
+        } else {
+            const active_s_cost_y0 = Math.min(350, Math.max(30, getY(state.s_cost_int)));
+            const active_s_cost_at_q = Math.min(350, Math.max(30, getY(state.s_cost_int + s_slope * state.q_tx)));
+            const psPoints = `${getX(0)},${active_s_cost_y0} ${getX(0)},${yPs} ${xQ},${yPs} ${xQ},${active_s_cost_at_q}`;
+            setAttr("region-ps", { points: psPoints });
+        }
+
+        if (state.gov_mode > 0) {
+            const taxPoints = `${getX(0)},${yPb} ${getX(0)},${yPs} ${xQ},${yPs} ${xQ},${yPb}`;
+            setAttr("region-tax", { points: taxPoints, opacity: 1 });
+            document.getElementById("region-tax").style.fill = state.gov_mode === 1 ? "var(--tax-color)" : "rgba(234,179,8,0.25)";
+        } else {
+            setAttr("region-tax", { opacity: 0 });
+        }
+
+        if (state.dwl_op > 0) {
+            const total_slope = d_slope + s_slope;
+            let eq_q = 0;
+            let eq_p = 0;
+            
+            if (is_d_vertical) {
+                eq_q = state.q_tx;
+                eq_p = state.s_cost_int + s_slope * eq_q;
+            } else if (is_s_vertical) {
+                eq_q = state.q_tx;
+                eq_p = state.d2_int - d_slope * eq_q;
+            } else {
+                eq_q = total_slope > 0 ? (state.d2_int - state.s_cost_int) / total_slope : 0;
+                eq_p = state.s_cost_int + s_slope * eq_q;
+            }
+
+            const active_d_at_q = is_d_vertical ? 30 : getY(state.d2_int - d_slope * state.q_tx);
+            const active_s_cost_at_q = is_s_vertical ? 350 : getY(state.s_cost_int + s_slope * state.q_tx);
+            
+            const dwlPoints = `${xQ},${active_d_at_q} ${xQ},${active_s_cost_at_q} ${getX(eq_q)},${getY(eq_p)}`;
+            setAttr("region-dwl", { points: dwlPoints, opacity: state.dwl_op });
+        } else {
+            setAttr("region-dwl", { opacity: 0 });
+        }
+
+        // Q6-Q18 (Levels 3 & 4) MB and MC exact markers with connecting dashed line
+        if (activeLvlIdx >= 5) {
+            setAttr("mb-mc-markers", { opacity: 1 });
+            let q = state.q_tx;
+
+            let mb_y = is_d_vertical ? yPb : getY(state.d2_int - d_slope * q);
+            let mc_y = is_s_vertical ? yPs : getY(state.s_cost_int + s_slope * q);
+            
+            setAttr("mb-mc-gap", { x1: xQ, y1: mb_y, x2: xQ, y2: mc_y });
+            
+            setAttr("dot-mb", { cx: xQ, cy: mb_y });
+            setAttr("lbl-mb-dot", { x: xQ + 10, y: mb_y + 4 });
+            
+            setAttr("dot-mc", { cx: xQ, cy: mc_y });
+            setAttr("lbl-mc-dot", { x: xQ + 10, y: mc_y + 4 });
+        } else {
+            setAttr("mb-mc-markers", { opacity: 0 });
+        }
+    }
+
+    function setAttr(id, obj) {
+        const el = document.getElementById(id);
+        if (!el) return;
+        for (let key in obj) el.setAttribute(key, obj[key]);
+    }
+
+    window.onload = initLayout;
+</script>
+
+</body>
+</html>
